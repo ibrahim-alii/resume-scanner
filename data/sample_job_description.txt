@@ -1,0 +1,28 @@
+Senior Python Developer
+
+We're looking for an experienced Python Developer to join our backend team. You'll be working on building scalable cloud infrastructure and developing microservices.
+
+Requirements:
+- 5+ years of experience with Python and JavaScript
+- Experience with Django or FastAPI web frameworks
+- Strong knowledge of PostgreSQL and MongoDB
+- AWS and cloud deployment experience
+- Docker and Kubernetes for containerization
+- REST API design and development
+- Experience with Git and GitHub
+- CI/CD pipelines and DevOps practices
+
+Nice to Have:
+- Experience with React for frontend integration
+- Familiarity with Redis for caching
+- Machine Learning with TensorFlow or PyTorch
+- Experience with microservices architecture
+- Terraform for infrastructure as code
+- Elasticsearch for search functionality
+- TypeScript for type safety
+- Kafka for message streaming
+
+We offer:
+- Competitive salary and benefits
+- Remote work opportunities
+- Professional development support
