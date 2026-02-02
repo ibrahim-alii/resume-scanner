@@ -65,31 +65,15 @@ def extract_text(file_path: str) -> str:
 
 
 def extract_contact_info(text: str) -> Dict[str, List[str]]:
-    """
-    Extract contact information from text using regex patterns.
     
-    Args:
-        text: The text to extract contact info from
-        
-    Returns:
-        Dictionary with keys: email, phone, linkedin, github
-        Each value is a list of strings (empty list if none found)
-    """
-    
-    # Email pattern
     email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
     
-    # Phone patterns (various formats)
-    # Matches: (555) 123-4567, 555-123-4567, 555.123.4567, 5551234567, +1 555-123-4567
     phone_pattern = r'(?:\+?1[-\.\s]?)?\(?\d{3}\)?[-\.\s]?\d{3}[-\.\s]?\d{4}'
     
-    # LinkedIn pattern
     linkedin_pattern = r'(?:https?://)?(?:www\.)?linkedin\.com/in/[a-zA-Z0-9_-]+'
     
-    # GitHub pattern
     github_pattern = r'(?:https?://)?(?:www\.)?github\.com/[a-zA-Z0-9_-]+'
     
-    # Extract contacts
     emails = re.findall(email_pattern, text)
     phones = re.findall(phone_pattern, text)
     linkedin = re.findall(linkedin_pattern, text, re.IGNORECASE)

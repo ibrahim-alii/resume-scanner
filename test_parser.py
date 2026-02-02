@@ -8,7 +8,6 @@ from app.scoring import compare_skills, compare_skills_from_text, get_skills_by_
 
 
 def test_day1_parser():
-    """Test Day 1: PDF/DOCX extraction and contact info"""
     print("\n" + "="*70)
     print("TEST - DAY 1: Document Parsing & Contact Extraction")
     print("="*70)
@@ -35,7 +34,6 @@ def test_day1_parser():
 
 
 def test_skills_extraction():
-    """Test basic skills extraction from text"""
     print("\n" + "="*70)
     print("TEST 1: Skills Extraction from Text")
     print("="*70)
