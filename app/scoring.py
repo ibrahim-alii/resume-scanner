@@ -68,22 +68,6 @@ def get_skills_by_category(resume_text: str, job_text: str) -> Dict:
 
 
 def tfidf_similarity(resume_text: str, job_description: str) -> float:
-    """
-    Calculate TF-IDF based similarity between resume and job description.
-    
-    TF-IDF finds important keywords that are unique to each document.
-    Good for catching exact skill mentions.
-    
-    Args:
-        resume_text: Full resume text
-        job_description: Job description text
-        
-    Returns:
-        Similarity score 0-100 (percentage)
-        
-    Raises:
-        ImportError: If scikit-learn is not installed
-    """
     if TfidfVectorizer is None or cosine_similarity is None:
         raise ImportError("scikit-learn is not installed. Install it with: pip install scikit-learn")
     
@@ -110,16 +94,6 @@ def tfidf_similarity(resume_text: str, job_description: str) -> float:
 
 
 def _extract_sections(text: str) -> list:
-    """
-    Extract sections from resume text for better BERT embedding.
-    Looks for common resume sections like experience, skills, education.
-    
-    Args:
-        text: Resume text
-        
-    Returns:
-        List of section texts
-    """
     # Common section headers
     section_patterns = [
         r'(?:experience|work experience|professional experience)(.*?)(?:(?:education|skills|projects|certifications)|$)',
@@ -150,22 +124,6 @@ def _extract_sections(text: str) -> list:
 
 
 def bert_similarity(resume_text: str, job_description: str) -> float:
-    """
-    Calculate BERT-based semantic similarity between resume and job description.
-    
-    BERT understands context and meaning, so "ML engineer" and "machine learning specialist"
-    are recognized as similar. Better at catching synonyms and related skills.
-    
-    Args:
-        resume_text: Full resume text
-        job_description: Job description text
-        
-    Returns:
-        Similarity score 0-100 (percentage)
-        
-    Raises:
-        ImportError: If sentence-transformers is not installed
-    """
     if SentenceTransformer is None:
         raise ImportError(
             "sentence-transformers is not installed. "
@@ -212,22 +170,7 @@ def composite_score(
     bert_weight: float = 0.8,
     tfidf_weight: float = 0.2
 ) -> dict:
-    """
-    Calculate composite score combining TF-IDF and BERT scores.
-    
-    Args:
-        resume_text: Full resume text
-        job_description: Job description text
-        bert_weight: Weight for BERT score (default 0.8)
-        tfidf_weight: Weight for TF-IDF score (default 0.2)
-        
-    Returns:
-        Dictionary with:
-            - 'composite_score': Final weighted score 0-100
-            - 'bert_score': BERT similarity 0-100
-            - 'tfidf_score': TF-IDF similarity 0-100
-            - 'breakdown': Dict showing weight breakdown
-    """
+
     try:
         # Calculate both scores
         bert_score = bert_similarity(resume_text, job_description)
