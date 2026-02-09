@@ -15,6 +15,7 @@ from app import (
     composite_score,
     extract_skills_as_set,
     extract_text,
+    extract_skills_hybrid,
 )
 
 # Load environment variables
@@ -23,16 +24,28 @@ load_dotenv()
 # Global variables for model caching
 bert_model = None
 gemini_model = None
+spacy_model = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Pre-load ML models at startup to avoid first-request delay"""
-    global bert_model, gemini_model
+    global bert_model, gemini_model, spacy_model
 
     print("[*] Loading BERT model...")
     bert_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
     print("[+] BERT model loaded successfully")
+
+    print("[*] Loading spaCy NER model...")
+    try:
+        from app.ner_extractor import get_ner_model
+        spacy_model = get_ner_model()
+        print("[+] spaCy NER model loaded successfully")
+    except Exception as e:
+        print(f"[!] Warning: spaCy NER model failed to load: {e}")
+        print("[!] NER features will be disabled. Please install: pip install spacy")
+        print("[!] Then download the model: python -m spacy download en_core_web_lg")
+        spacy_model = None
 
     # Configure Gemini
     gemini_api_key = os.getenv("GEMINI_API_KEY")
@@ -91,6 +104,50 @@ class SkillsComparisonResponse(BaseModel):
 class AnalysisResponse(BaseModel):
     success: bool
     data: Dict
+
+
+def _build_enhanced_skills_comparison(resume_skills_dict, job_skills_dict, basic_comparison):
+    """
+    Build enhanced skills comparison with metadata (confidence, proficiency, years).
+    Creates lookup maps of skills to their SkillEntity objects.
+    """
+    # Create lookup maps
+    resume_skills_map = {}  # {skill_name: SkillEntity}
+    for skills_list in resume_skills_dict.values():
+        for skill in skills_list:
+            resume_skills_map[skill.skill_name] = skill
+
+    job_skills_map = {}  # {skill_name: SkillEntity}
+    for skills_list in job_skills_dict.values():
+        for skill in skills_list:
+            job_skills_map[skill.skill_name] = skill
+
+    # Build enhanced results with metadata
+    enhanced = {
+        'matching': [
+            resume_skills_map[skill].to_dict()
+            for skill in basic_comparison['matching']
+            if skill in resume_skills_map
+        ],
+        'missing': [
+            job_skills_map[skill].to_dict()
+            for skill in basic_comparison['missing']
+            if skill in job_skills_map
+        ],
+        'additional': [
+            resume_skills_map[skill].to_dict()
+            for skill in basic_comparison['additional']
+            if skill in resume_skills_map
+        ],
+        'match_percentage': basic_comparison['match_percentage'],
+        'total_job_skills': basic_comparison['total_job_skills'],
+        'total_resume_skills': basic_comparison['total_resume_skills'],
+        'matching_count': basic_comparison['matching_count'],
+        'missing_count': basic_comparison['missing_count'],
+        'additional_count': basic_comparison['additional_count']
+    }
+
+    return enhanced
 
 
 def generate_gemini_feedback(
@@ -197,10 +254,31 @@ async def analyze_resume(
         score_data = composite_score(resume_text, job_description)
         print(f"[+] Composite Score: {score_data['composite_score']}/100")
 
+        # Extract skills with metadata using hybrid approach
+        print("[*] Extracting skills (hybrid NER + regex)...")
+        resume_skills_hybrid = extract_skills_hybrid(resume_text)
+        job_skills_hybrid = extract_skills_hybrid(job_description)
+
+        # Convert to sets for comparison (for backward compatibility)
+        resume_skills_set = set()
+        for skills_list in resume_skills_hybrid.values():
+            for skill in skills_list:
+                resume_skills_set.add(skill.skill_name)
+
+        job_skills_set = set()
+        for skills_list in job_skills_hybrid.values():
+            for skill in skills_list:
+                job_skills_set.add(skill.skill_name)
+
         # Compare skills
         print("[*] Comparing skills...")
         skills_comp = compare_skills_from_text(resume_text, job_description)
         print(f"[+] Found {skills_comp['matching_count']} matching skills, {skills_comp['missing_count']} missing")
+
+        # Build enhanced skills comparison with metadata
+        skills_comp_enhanced = _build_enhanced_skills_comparison(
+            resume_skills_hybrid, job_skills_hybrid, skills_comp
+        )
 
         # Generate Gemini feedback
         print("[*] Generating AI feedback...")
@@ -216,7 +294,7 @@ async def analyze_resume(
             "success": True,
             "data": {
                 "composite_score": score_data,
-                "skills_comparison": skills_comp,
+                "skills_comparison": skills_comp_enhanced,
                 "gemini_feedback": gemini_feedback
             }
         }
