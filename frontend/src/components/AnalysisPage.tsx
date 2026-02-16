@@ -1,21 +1,20 @@
-import React from 'react';
+﻿import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { CompositeScore, SkillsComparison } from '../types/api';
 
 interface AnalysisData {
   composite_score: CompositeScore;
   skills_comparison: SkillsComparison;
-  gemini_feedback: string;
 }
 
 export const AnalysisPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [showAllAdditionalSkills, setShowAllAdditionalSkills] = React.useState(false);
 
   const analysisData = location.state?.analysisData as AnalysisData | undefined;
   const resumeFileName = location.state?.resumeFileName as string | undefined;
 
-  // Redirect if no data
   React.useEffect(() => {
     if (!analysisData) {
       navigate('/');
@@ -24,12 +23,15 @@ export const AnalysisPage: React.FC = () => {
 
   if (!analysisData) return null;
 
-  const { composite_score, skills_comparison, gemini_feedback } = analysisData;
+  const { composite_score, skills_comparison } = analysisData;
+  const additionalSkills = showAllAdditionalSkills
+    ? skills_comparison.additional
+    : skills_comparison.additional.slice(0, 10);
+  const hiddenAdditionalCount = Math.max(skills_comparison.additional.length - 10, 0);
 
   return (
     <div className="min-h-screen bg-cream p-8">
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="font-retro text-5xl mb-2 text-text font-bold">
             Analysis Results
@@ -41,7 +43,6 @@ export const AnalysisPage: React.FC = () => {
           )}
         </div>
 
-        {/* Composite Score */}
         <div className="mb-8">
           <div
             className="
@@ -79,7 +80,6 @@ export const AnalysisPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Skills Comparison */}
         <div className="mb-8">
           <div
             className="
@@ -95,7 +95,6 @@ export const AnalysisPage: React.FC = () => {
               Skills Analysis
             </h2>
 
-            {/* Stats */}
             <div className="mb-6 p-4 bg-peach rounded-retro">
               <div className="font-retro text-text text-lg">
                 <strong>Match Rate:</strong> {Math.round(skills_comparison.match_percentage)}%
@@ -103,11 +102,10 @@ export const AnalysisPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Matching Skills */}
             {skills_comparison.matching.length > 0 && (
               <div className="mb-4">
                 <h3 className="font-retro text-xl text-green-700 font-bold mb-2">
-                  ✓ Matching Skills ({skills_comparison.matching.length})
+                  Matching Skills ({skills_comparison.matching.length})
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {skills_comparison.matching.map((skill, idx) => (
@@ -132,11 +130,10 @@ export const AnalysisPage: React.FC = () => {
               </div>
             )}
 
-            {/* Missing Skills */}
             {skills_comparison.missing.length > 0 && (
               <div className="mb-4">
                 <h3 className="font-retro text-xl text-red-700 font-bold mb-2">
-                  ✗ Missing Skills ({skills_comparison.missing.length})
+                  Missing Skills ({skills_comparison.missing.length})
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {skills_comparison.missing.map((skill, idx) => (
@@ -161,14 +158,13 @@ export const AnalysisPage: React.FC = () => {
               </div>
             )}
 
-            {/* Additional Skills */}
             {skills_comparison.additional.length > 0 && (
               <div>
                 <h3 className="font-retro text-xl text-blue-700 font-bold mb-2">
                   + Additional Skills ({skills_comparison.additional.length})
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {skills_comparison.additional.slice(0, 10).map((skill, idx) => (
+                  {additionalSkills.map((skill, idx) => (
                     <span
                       key={idx}
                       className="
@@ -186,39 +182,34 @@ export const AnalysisPage: React.FC = () => {
                       {skill}
                     </span>
                   ))}
-                  {skills_comparison.additional.length > 10 && (
-                    <span className="font-retro text-text text-sm self-center">
-                      +{skills_comparison.additional.length - 10} more
-                    </span>
-                  )}
                 </div>
+                {skills_comparison.additional.length > 10 && (
+                  <button
+                    className="
+                      mt-3
+                      bg-peach
+                      text-text
+                      px-4
+                      py-2
+                      rounded-retro
+                      font-retro
+                      text-sm
+                      shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+                      hover:translate-x-[1px]
+                      hover:translate-y-[1px]
+                      hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                      transition-all
+                    "
+                    onClick={() => setShowAllAdditionalSkills((prev) => !prev)}
+                  >
+                    {showAllAdditionalSkills ? 'Show less' : `Show ${hiddenAdditionalCount} more`}
+                  </button>
+                )}
               </div>
             )}
           </div>
         </div>
 
-        {/* Gemini Feedback */}
-        <div className="mb-8">
-          <div
-            className="
-              bg-white
-              border-4
-              border-text
-              rounded-box
-              p-6
-              shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]
-            "
-          >
-            <h2 className="font-retro text-2xl mb-4 text-text font-bold flex items-center gap-2">
-              <span>🤖</span> AI Suggestions
-            </h2>
-            <div className="font-retro text-text whitespace-pre-line">
-              {gemini_feedback}
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
         <div className="flex justify-center gap-4">
           <button
             className="

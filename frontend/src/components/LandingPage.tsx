@@ -30,7 +30,7 @@ export const LandingPage: React.FC = () => {
       <div className="text-center">
         {/* Title */}
         <h1 className="font-retro text-7xl mb-4 text-text font-bold">
-          ResuMax
+          ResuMatch
         </h1>
 
         {/* Description */}
@@ -95,3 +95,4 @@ export const LandingPage: React.FC = () => {
     </div>
   );
 };
+

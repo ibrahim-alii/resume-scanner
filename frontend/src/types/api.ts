@@ -25,6 +25,5 @@ export interface AnalysisResponse {
   data: {
     composite_score: CompositeScore;
     skills_comparison: SkillsComparison;
-    gemini_feedback: string;
   };
 }

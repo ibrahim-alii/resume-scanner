@@ -127,7 +127,7 @@ export const JobDescriptionInput: React.FC = () => {
         {loading && (
           <div className="mt-6 text-center">
             <p className="font-retro text-text text-lg">
-              🔍 Analyzing your resume...
+              Analyzing your resume...
               <br />
               <span className="text-sm">This may take 10-30 seconds</span>
             </p>
@@ -161,7 +161,7 @@ export const JobDescriptionInput: React.FC = () => {
             onClick={() => navigate('/')}
             disabled={loading}
           >
-            ← Back to Upload
+            Back to Upload
           </button>
         </div>
       </div>
