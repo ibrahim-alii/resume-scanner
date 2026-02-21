@@ -15,6 +15,42 @@ try:
 except ImportError:
     SentenceTransformer = None
 
+_BERT_MODEL = None
+_BERT_LOAD_ERROR = None
+
+
+def _normalize_text(text: str) -> str:
+    if not text:
+        return ""
+    # Remove problematic control chars that can break tokenization on some inputs.
+    cleaned = text.replace("\x00", " ")
+    cleaned = re.sub(r"[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]", " ", cleaned)
+    return cleaned.strip()
+
+
+def _get_bert_model():
+    global _BERT_MODEL, _BERT_LOAD_ERROR
+    if SentenceTransformer is None:
+        raise ImportError(
+            "sentence-transformers is not installed. "
+            "Install it with: pip install sentence-transformers torch"
+        )
+    if _BERT_LOAD_ERROR is not None:
+        raise RuntimeError(_BERT_LOAD_ERROR)
+    if _BERT_MODEL is None:
+        try:
+            _BERT_MODEL = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+        except Exception as e:
+            _BERT_LOAD_ERROR = f"Could not load BERT model: {e}"
+            raise RuntimeError(_BERT_LOAD_ERROR)
+    return _BERT_MODEL
+
+
+def set_bert_model(model) -> None:
+    global _BERT_MODEL, _BERT_LOAD_ERROR
+    _BERT_MODEL = model
+    _BERT_LOAD_ERROR = None
+
 
 def compare_skills(resume_skills: Set[str], job_skills: Set[str]) -> Dict:
     matching = resume_skills & job_skills 
@@ -124,15 +160,10 @@ def _extract_sections(text: str) -> list:
 
 
 def bert_similarity(resume_text: str, job_description: str) -> float:
-    if SentenceTransformer is None:
-        raise ImportError(
-            "sentence-transformers is not installed. "
-            "Install it with: pip install sentence-transformers torch"
-        )
-    
     try:
-        # Load pre-trained BERT model (MiniLM - fast and balanced)
-        model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+        model = _get_bert_model()
+        resume_text = _normalize_text(resume_text)
+        job_description = _normalize_text(job_description)
         
         # Embed job description (single vector)
         job_embedding = model.encode(job_description, convert_to_numpy=True)
@@ -172,14 +203,22 @@ def composite_score(
 ) -> dict:
 
     try:
-        # Calculate both scores
-        bert_score = bert_similarity(resume_text, job_description)
+        # Always calculate TF-IDF; use it as fallback if BERT fails.
         tfidf_score = tfidf_similarity(resume_text, job_description)
+        bert_error = None
+        try:
+            bert_score = bert_similarity(resume_text, job_description)
+        except Exception as e:
+            bert_error = str(e)
+            # Graceful degradation: if BERT is unavailable/fails, rely on TF-IDF.
+            bert_score = tfidf_score
+            bert_weight = 0.0
+            tfidf_weight = 1.0
         
         # Combine with weights
         composite = (bert_score * bert_weight) + (tfidf_score * tfidf_weight)
         
-        return {
+        result = {
             'composite_score': round(composite, 2),
             'bert_score': round(bert_score, 2),
             'tfidf_score': round(tfidf_score, 2),
@@ -188,6 +227,9 @@ def composite_score(
                 'tfidf': f"{tfidf_weight * 100:.0f}%"
             }
         }
+        if bert_error:
+            result['warning'] = f"BERT scoring unavailable, used TF-IDF fallback: {bert_error}"
+        return result
     
     except Exception as e:
         raise ValueError(f"Composite score calculation failed: {str(e)}")

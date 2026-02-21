@@ -9,15 +9,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 
+# Load environment variables (.env values override existing shell vars)
+load_dotenv(override=True)
+
 from app import (
     compare_skills_from_text,
     composite_score,
     extract_text,
     extract_skills_hybrid,
 )
-
-# Load environment variables (.env values override existing shell vars)
-load_dotenv(override=True)
+from app.scoring import set_bert_model, tfidf_similarity
+from app.gemini_service import generate_ai_suggestions
 
 # Global variables for model caching
 bert_model = None
@@ -30,8 +32,14 @@ async def lifespan(app: FastAPI):
     global bert_model, spacy_model
 
     print("[*] Loading BERT model...")
-    bert_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-    print("[+] BERT model loaded successfully")
+    try:
+        bert_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+        set_bert_model(bert_model)
+        print("[+] BERT model loaded successfully")
+    except Exception as e:
+        bert_model = None
+        print(f"[!] Warning: BERT model failed to load: {e}")
+        print("[!] Semantic scoring disabled; TF-IDF fallback will be used.")
 
     print("[*] Loading spaCy NER model...")
     try:
@@ -84,6 +92,48 @@ class SkillsComparisonResponse(BaseModel):
     additional_count: int
 
 
+class SkillGap(BaseModel):
+    skill: str
+    priority: str
+    explanation: str
+    suggestion: str
+
+
+class QuantificationOpportunity(BaseModel):
+    original_text: str
+    issue: str
+    suggested_rewrite: str
+    metrics_to_consider: List[str]
+
+
+class AtsOptimization(BaseModel):
+    keyword: str
+    importance: str
+    current_usage: str
+    suggestion: str
+
+
+class ImpactStatement(BaseModel):
+    original_text: str
+    weakness: str
+    suggested_rewrite: str
+    action_verb_used: str
+
+
+class StrategicRecommendation(BaseModel):
+    category: str
+    recommendation: str
+    impact: str
+
+
+class AiSuggestions(BaseModel):
+    skill_gaps: List[SkillGap]
+    quantification_opportunities: List[QuantificationOpportunity]
+    ats_optimization: List[AtsOptimization]
+    impact_statements: List[ImpactStatement]
+    strategic_recommendations: List[StrategicRecommendation]
+
+
 class AnalysisResponse(BaseModel):
     success: bool
     data: Dict
@@ -100,6 +150,7 @@ async def health_check():
     return {
         "status": "healthy",
         "bert_loaded": bert_model is not None,
+        "scoring_fallback_enabled": True,
     }
 
 
@@ -137,7 +188,18 @@ async def analyze_resume(
         print(f"[+] Extracted {len(resume_text)} characters")
 
         print("[*] Calculating scores...")
-        score_data = composite_score(resume_text, job_description)
+        try:
+            score_data = composite_score(resume_text, job_description)
+        except Exception as score_error:
+            print(f"[!] Composite score failed, falling back to TF-IDF only: {score_error}")
+            tfidf_score = tfidf_similarity(resume_text, job_description)
+            score_data = {
+                "composite_score": round(tfidf_score, 2),
+                "bert_score": round(tfidf_score, 2),
+                "tfidf_score": round(tfidf_score, 2),
+                "breakdown": {"bert": "0%", "tfidf": "100%"},
+                "warning": f"Used TF-IDF fallback due to scoring error: {score_error}",
+            }
         print(f"[+] Composite Score: {score_data['composite_score']}/100")
 
         print("[*] Extracting skills (hybrid NER + regex)...")
@@ -152,12 +214,43 @@ async def analyze_resume(
             resume_skills_hybrid, job_skills_hybrid, skills_comp
         )
 
+        # Generate AI-powered suggestions with Gemini
+        print("[*] Generating AI-powered suggestions with Gemini...")
+        ai_suggestions = None
+        ai_suggestions_error = None
+        try:
+            ai_suggestions = generate_ai_suggestions(
+                resume_text=resume_text,
+                job_description=job_description,
+                missing_skills=skills_comp['missing'],
+                matching_skills=skills_comp['matching']
+            )
+            if ai_suggestions:
+                print("[+] AI suggestions generated successfully")
+            else:
+                print("[!] AI suggestions skipped (API not configured or returned None)")
+                ai_suggestions_error = (
+                    "AI suggestions are currently unavailable. "
+                    "Set GEMINI_API_KEY to enable the AI Resume Coach."
+                )
+        except Exception as e:
+            ai_suggestions_error = str(e)
+            print(f"[!] AI suggestions failed: {e}")
+
+        response_data = {
+            "composite_score": score_data,
+            "skills_comparison": skills_comp_enhanced,
+        }
+
+        # Add AI suggestions if available
+        if ai_suggestions:
+            response_data["ai_suggestions"] = ai_suggestions
+        if ai_suggestions_error:
+            response_data["ai_suggestions_error"] = ai_suggestions_error
+
         return {
             "success": True,
-            "data": {
-                "composite_score": score_data,
-                "skills_comparison": skills_comp_enhanced,
-            },
+            "data": response_data,
         }
 
     except HTTPException:
@@ -176,8 +269,9 @@ if __name__ == "__main__":
     print("=" * 60)
     print("ResuMatch API Server")
     print("=" * 60)
-    print("API Documentation: http://localhost:8000/docs")
-    print("Health Check: http://localhost:8000/api/health")
+    port = int(os.getenv("PORT", "8001"))
+    print(f"API Documentation: http://localhost:{port}/docs")
+    print(f"Health Check: http://localhost:{port}/api/health")
     print("=" * 60)
 
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")

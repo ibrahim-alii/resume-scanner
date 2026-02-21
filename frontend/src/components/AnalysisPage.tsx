@@ -1,10 +1,22 @@
-﻿import React from 'react';
+import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import type { CompositeScore, SkillsComparison } from '../types/api';
+import type {
+  CompositeScore,
+  SkillsComparison,
+  AiSuggestions,
+  SkillGap,
+  QuantificationOpportunity,
+  AtsOptimization,
+  ImpactStatement,
+  StrategicRecommendation
+} from '../types/api';
+import { SuggestionSection } from './SuggestionSection';
 
 interface AnalysisData {
   composite_score: CompositeScore;
   skills_comparison: SkillsComparison;
+  ai_suggestions?: AiSuggestions;
+  ai_suggestions_error?: string;
 }
 
 export const AnalysisPage: React.FC = () => {
@@ -209,6 +221,200 @@ export const AnalysisPage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* AI-Powered Resume Coach Section */}
+        {analysisData.ai_suggestions && (
+          <div className="mb-8">
+            <div className="bg-white border-4 border-text rounded-box p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+              <h2 className="font-retro text-3xl mb-6 text-text font-bold flex items-center gap-3">
+                <span className="text-4xl">🤖</span>
+                AI-Powered Resume Coach
+              </h2>
+
+              {/* Skill Gaps Section */}
+              <SuggestionSection<SkillGap>
+                title="Critical Skill Gaps"
+                emoji="🎯"
+                colorClass="bg-red-600"
+                items={analysisData.ai_suggestions.skill_gaps}
+                renderItem={(gap) => (
+                  <div>
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-retro text-lg font-bold text-text">{gap.skill}</h4>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          gap.priority === 'critical'
+                            ? 'bg-red-200 text-red-900'
+                            : gap.priority === 'high'
+                            ? 'bg-orange-200 text-orange-900'
+                            : 'bg-yellow-200 text-yellow-900'
+                        }`}
+                      >
+                        {gap.priority.toUpperCase()}
+                      </span>
+                    </div>
+                    <p className="text-gray-700 mb-2">
+                      <strong>Why it matters:</strong> {gap.explanation}
+                    </p>
+                    <p className="text-gray-700">
+                      <strong>How to improve:</strong> {gap.suggestion}
+                    </p>
+                  </div>
+                )}
+              />
+
+              {/* Quantification Opportunities Section */}
+              <SuggestionSection<QuantificationOpportunity>
+                title="Add Metrics & Numbers"
+                emoji="📊"
+                colorClass="bg-blue-600"
+                items={analysisData.ai_suggestions.quantification_opportunities}
+                renderItem={(opp) => (
+                  <div>
+                    <div className="mb-3">
+                      <div className="text-sm font-bold text-red-700 mb-1">❌ Before:</div>
+                      <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                        <p className="text-gray-800 italic">"{opp.original_text}"</p>
+                        <p className="text-red-600 text-sm mt-1">Issue: {opp.issue}</p>
+                      </div>
+                    </div>
+                    <div className="mb-2">
+                      <div className="text-sm font-bold text-green-700 mb-1">✅ After:</div>
+                      <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                        <p className="text-gray-800 font-medium">"{opp.suggested_rewrite}"</p>
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <span className="text-sm text-gray-600">
+                        <strong>Metrics to consider:</strong>{' '}
+                        {opp.metrics_to_consider.join(', ')}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              />
+
+              {/* ATS Optimization Section */}
+              <SuggestionSection<AtsOptimization>
+                title="ATS Keyword Optimization"
+                emoji="🔍"
+                colorClass="bg-purple-600"
+                items={analysisData.ai_suggestions.ats_optimization}
+                renderItem={(ats) => (
+                  <div>
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-retro text-lg font-bold text-text">"{ats.keyword}"</h4>
+                      <div className="flex gap-2">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-bold ${
+                            ats.importance === 'high'
+                              ? 'bg-red-200 text-red-900'
+                              : ats.importance === 'medium'
+                              ? 'bg-yellow-200 text-yellow-900'
+                              : 'bg-gray-200 text-gray-900'
+                          }`}
+                        >
+                          {ats.importance.toUpperCase()}
+                        </span>
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-bold ${
+                            ats.current_usage === 'missing'
+                              ? 'bg-red-100 text-red-800'
+                              : ats.current_usage === 'underused'
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-green-100 text-green-800'
+                          }`}
+                        >
+                          {ats.current_usage}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-gray-700">{ats.suggestion}</p>
+                  </div>
+                )}
+              />
+
+              {/* Impact Statements Section */}
+              <SuggestionSection<ImpactStatement>
+                title="Strengthen Bullet Points"
+                emoji="💪"
+                colorClass="bg-green-600"
+                items={analysisData.ai_suggestions.impact_statements}
+                renderItem={(impact) => (
+                  <div>
+                    <div className="mb-3">
+                      <div className="text-sm font-bold text-red-700 mb-1">❌ Weak:</div>
+                      <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                        <p className="text-gray-800 italic">"{impact.original_text}"</p>
+                        <p className="text-red-600 text-sm mt-1">Problem: {impact.weakness}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-green-700 mb-1">✅ Strong:</div>
+                      <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                        <p className="text-gray-800 font-medium">"{impact.suggested_rewrite}"</p>
+                        <p className="text-green-600 text-sm mt-1">
+                          Action verb: <strong>{impact.action_verb_used}</strong>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              />
+
+              {/* Strategic Recommendations Section */}
+              <SuggestionSection<StrategicRecommendation>
+                title="Strategic Recommendations"
+                emoji="🎓"
+                colorClass="bg-teal-600"
+                items={analysisData.ai_suggestions.strategic_recommendations}
+                renderItem={(rec) => (
+                  <div>
+                    <div className="flex items-start justify-between mb-2">
+                      <span className="px-3 py-1 bg-gray-200 text-gray-800 rounded text-xs font-bold uppercase">
+                        {rec.category}
+                      </span>
+                      <span
+                        className={`px-3 py-1 rounded text-xs font-bold ${
+                          rec.impact === 'high'
+                            ? 'bg-red-200 text-red-900'
+                            : rec.impact === 'medium'
+                            ? 'bg-yellow-200 text-yellow-900'
+                            : 'bg-blue-200 text-blue-900'
+                        }`}
+                      >
+                        {rec.impact.toUpperCase()} IMPACT
+                      </span>
+                    </div>
+                    <p className="text-gray-800 text-base leading-relaxed">{rec.recommendation}</p>
+                  </div>
+                )}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Error state for AI suggestions */}
+        {analysisData.ai_suggestions_error && (
+          <div className="mb-8">
+            <div className="bg-yellow-50 border-4 border-yellow-500 rounded-box p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+              <div className="flex items-start gap-3">
+                <span className="text-3xl">⚠️</span>
+                <div>
+                  <h3 className="font-retro text-xl font-bold text-yellow-900 mb-2">
+                    AI Suggestions Unavailable
+                  </h3>
+                  <p className="text-yellow-800">
+                    {analysisData.ai_suggestions_error}
+                  </p>
+                  <p className="text-yellow-700 text-sm mt-2">
+                    Don't worry - your resume analysis and skills comparison are still complete!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-center gap-4">
           <button
