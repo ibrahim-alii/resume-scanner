@@ -1,4 +1,4 @@
-﻿import os
+import os
 import tempfile
 from contextlib import asynccontextmanager
 from typing import Dict, List
@@ -8,8 +8,6 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
-
-# Load environment variables (.env values override existing shell vars)
 load_dotenv(override=True)
 
 from app import (
@@ -20,8 +18,6 @@ from app import (
 )
 from app.scoring import set_bert_model, tfidf_similarity
 from app.gemini_service import generate_ai_suggestions
-
-# Global variables for model caching
 bert_model = None
 spacy_model = None
 
@@ -213,8 +209,6 @@ async def analyze_resume(
         skills_comp_enhanced = _build_enhanced_skills_comparison(
             resume_skills_hybrid, job_skills_hybrid, skills_comp
         )
-
-        # Generate AI-powered suggestions with Gemini
         print("[*] Generating AI-powered suggestions with Gemini...")
         ai_suggestions = None
         ai_suggestions_error = None
@@ -241,8 +235,6 @@ async def analyze_resume(
             "composite_score": score_data,
             "skills_comparison": skills_comp_enhanced,
         }
-
-        # Add AI suggestions if available
         if ai_suggestions:
             response_data["ai_suggestions"] = ai_suggestions
         if ai_suggestions_error:

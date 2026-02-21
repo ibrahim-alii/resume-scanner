@@ -3,7 +3,7 @@ import { useState } from 'react';
 interface SuggestionSectionProps<T> {
   title: string;
   emoji: string;
-  colorClass: string; // e.g., 'bg-red-600'
+  colorClass: string; 
   items: T[];
   renderItem: (item: T, index: number) => React.ReactNode;
 }
@@ -18,7 +18,7 @@ export function SuggestionSection<T>({
   const [isExpanded, setIsExpanded] = useState(true);
 
   if (!items || items.length === 0) {
-    return null; // Don't render empty sections
+    return null; 
   }
 
   return (

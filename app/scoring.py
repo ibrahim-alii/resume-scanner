@@ -22,7 +22,6 @@ _BERT_LOAD_ERROR = None
 def _normalize_text(text: str) -> str:
     if not text:
         return ""
-    # Remove problematic control chars that can break tokenization on some inputs.
     cleaned = text.replace("\x00", " ")
     cleaned = re.sub(r"[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]", " ", cleaned)
     return cleaned.strip()
@@ -108,21 +107,14 @@ def tfidf_similarity(resume_text: str, job_description: str) -> float:
         raise ImportError("scikit-learn is not installed. Install it with: pip install scikit-learn")
     
     try:
-        # Create TF-IDF vectors
         vectorizer = TfidfVectorizer(
             max_features=1000,
             stop_words='english',
-            ngram_range=(1, 2)  # Single words and two-word phrases
+            ngram_range=(1, 2)  
         )
-        
-        # Fit and transform both documents
         vectors = vectorizer.fit_transform([resume_text, job_description])
-        
-        # Calculate cosine similarity between resume and job description
         similarity_matrix = cosine_similarity(vectors[0:1], vectors[1:2])
         similarity_score = similarity_matrix[0][0]
-        
-        # Convert 0-1 to 0-100
         return float(similarity_score * 100)
     
     except Exception as e:
@@ -130,7 +122,6 @@ def tfidf_similarity(resume_text: str, job_description: str) -> float:
 
 
 def _extract_sections(text: str) -> list:
-    # Common section headers
     section_patterns = [
         r'(?:experience|work experience|professional experience)(.*?)(?:(?:education|skills|projects|certifications)|$)',
         r'(?:skills|technical skills)(.*?)(?:(?:experience|education|projects|certifications)|$)',
@@ -146,8 +137,6 @@ def _extract_sections(text: str) -> list:
             section_text = match.group(1).strip()
             if section_text:
                 sections.append(section_text)
-    
-    # If no sections found, split into chunks
     if not sections:
         chunk_size = 500
         words = text.split()
@@ -164,31 +153,20 @@ def bert_similarity(resume_text: str, job_description: str) -> float:
         model = _get_bert_model()
         resume_text = _normalize_text(resume_text)
         job_description = _normalize_text(job_description)
-        
-        # Embed job description (single vector)
         job_embedding = model.encode(job_description, convert_to_numpy=True)
-        
-        # Extract resume sections and embed each
         resume_sections = _extract_sections(resume_text)
         section_embeddings = [
             model.encode(section, convert_to_numpy=True)
             for section in resume_sections
         ]
-        
-        # Calculate similarity for each section
         section_similarities = []
         for section_embedding in section_embeddings:
-            # Reshape for cosine_similarity
             section_embedding = section_embedding.reshape(1, -1)
             job_embedding_reshaped = job_embedding.reshape(1, -1)
             
             similarity = cosine_similarity(section_embedding, job_embedding_reshaped)[0][0]
             section_similarities.append(float(similarity))
-        
-        # Average similarity across sections
         avg_similarity = np.mean(section_similarities) if section_similarities else 0.0
-        
-        # Convert 0-1 to 0-100
         return float(avg_similarity * 100)
     
     except Exception as e:
@@ -203,19 +181,15 @@ def composite_score(
 ) -> dict:
 
     try:
-        # Always calculate TF-IDF; use it as fallback if BERT fails.
         tfidf_score = tfidf_similarity(resume_text, job_description)
         bert_error = None
         try:
             bert_score = bert_similarity(resume_text, job_description)
         except Exception as e:
             bert_error = str(e)
-            # Graceful degradation: if BERT is unavailable/fails, rely on TF-IDF.
             bert_score = tfidf_score
             bert_weight = 0.0
             tfidf_weight = 1.0
-        
-        # Combine with weights
         composite = (bert_score * bert_weight) + (tfidf_score * tfidf_weight)
         
         result = {

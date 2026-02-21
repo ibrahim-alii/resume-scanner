@@ -34,13 +34,9 @@ class SkillNER:
             self.model = spacy.load("en_core_web_lg")
             self.phrase_matcher = PhraseMatcher(self.model.vocab)
             self.matcher = Matcher(self.model.vocab)
-
-            # Add skill patterns using PhraseMatcher for exact phrases
             for skill in self.all_skills:
                 pattern = self.model.make_doc(skill)
                 self.phrase_matcher.add("SKILL", [pattern])
-
-            # Add regex-based patterns using Matcher
             self._add_regex_patterns()
 
         except OSError:
@@ -51,14 +47,12 @@ class SkillNER:
 
     def _add_regex_patterns(self):
         """Add regex-based patterns for tech skills"""
-        # Pattern for "X years of SKILL" or "X+ years SKILL"
         year_pattern = [
-            {"LOWER": {"REGEX": r"^\d+(\.\d+)?(\+)?$"}},  # Number like "5" or "5+"
-            {"LOWER": {"REGEX": r"^years?$"}},             # "year" or "years"
-            {"LOWER": {"REGEX": r"^(of|in)?$"}, "OP": "?"},  # Optional "of" or "in"
-            {"ENT_TYPE": "SKILL", "OP": "+"}               # One or more skills
+            {"LOWER": {"REGEX": r"^\d+(\.\d+)?(\+)?$"}},  
+            {"LOWER": {"REGEX": r"^years?$"}},             
+            {"LOWER": {"REGEX": r"^(of|in)?$"}, "OP": "?"},  
+            {"ENT_TYPE": "SKILL", "OP": "+"}               
         ]
-        # Note: Matching against ENT_TYPE requires doc to be processed first
 
     def extract_skills_ner(self, text: str) -> List[SkillEntity]:
         """Extract skills from text using NER"""
@@ -68,8 +62,6 @@ class SkillNER:
         doc = self.model(text)
         skills = []
         seen_skills = set()
-
-        # Get matches from phrase matcher (exact skill matches)
         matches = self.phrase_matcher(doc)
 
         for match_id, start, end in matches:
@@ -78,25 +70,15 @@ class SkillNER:
 
             if skill_text in seen_skills:
                 continue
-
-            # Get surrounding context (±50 chars)
             context_start = max(0, span.start_char - 50)
             context_end = min(len(text), span.end_char + 50)
             context = text[context_start:context_end].strip()
-
-            # Detect proficiency and years from context
             proficiency = self._detect_proficiency(context)
             years = self._extract_years_experience(context)
             seniority = self._infer_seniority(years, proficiency)
-
-            # Get skill category
             normalized = normalize_skill(skill_text)
             category = get_skill_category(normalized) or "other"
-
-            # Determine section (simple heuristic)
             section = self._detect_section(doc, span)
-
-            # Calculate confidence
             confidence = self._calculate_confidence("exact_match", 1.0, years, proficiency)
 
             skill = SkillEntity(
@@ -119,8 +101,6 @@ class SkillNER:
     def _detect_proficiency(self, context: str) -> str:
         """Detect proficiency level from context"""
         context_lower = context.lower()
-
-        # Check for expert indicators
         expert_keywords = [
             'expert', 'lead', 'architect', 'master', 'proficient with',
             'extensive', 'proven expertise', 'deep knowledge'
@@ -128,8 +108,6 @@ class SkillNER:
         for keyword in expert_keywords:
             if keyword in context_lower:
                 return "expert"
-
-        # Check for intermediate indicators
         intermediate_keywords = [
             'experienced', 'worked with', 'skilled in', 'proficient',
             'comfortable with', 'solid', 'strong'
@@ -137,8 +115,6 @@ class SkillNER:
         for keyword in intermediate_keywords:
             if keyword in context_lower:
                 return "intermediate"
-
-        # Check for beginner indicators
         beginner_keywords = [
             'learning', 'familiar with', 'basic', 'introduced to',
             'exploring', 'beginner', 'novice'
@@ -146,8 +122,6 @@ class SkillNER:
         for keyword in beginner_keywords:
             if keyword in context_lower:
                 return "beginner"
-
-        # Default: intermediate if years mentioned, else beginner
         if re.search(r'\d+\s*(?:\+)?\s*years?', context_lower):
             return "intermediate"
 
@@ -155,7 +129,6 @@ class SkillNER:
 
     def _extract_years_experience(self, context: str) -> Optional[float]:
         """Extract years of experience from context"""
-        # Pattern: "X years", "X+ years", "X.X years", "X year"
         patterns = [
             r'(\d+(?:\.\d+)?)\s*(?:\+)?\s*years?(?:\s+of|\s+in|\s+experience)?',
             r'for\s+(\d+(?:\.\d+)?)\s*(?:\+)?\s*years?',
@@ -166,7 +139,6 @@ class SkillNER:
             matches = re.findall(pattern, context, re.IGNORECASE)
             if matches:
                 try:
-                    # Take the first match
                     value = float(matches[0])
                     return value
                 except (ValueError, IndexError):
@@ -176,7 +148,6 @@ class SkillNER:
 
     def _infer_seniority(self, years: Optional[float], proficiency: str) -> str:
         """Infer seniority level from years and proficiency"""
-        # Priority: years > proficiency
         if years is not None:
             if years < 1:
                 return "junior"
@@ -184,8 +155,6 @@ class SkillNER:
                 return "mid"
             else:
                 return "senior"
-
-        # Fallback to proficiency
         if proficiency == "expert":
             return "senior"
         elif proficiency == "intermediate":
@@ -195,7 +164,6 @@ class SkillNER:
 
     def _detect_section(self, doc, span) -> str:
         """Detect which section (experience, education, skills) the skill appears in"""
-        # Simple heuristic: look backwards for section headers
         text_before = doc[:span.start].text.lower()
 
         if "experience" in text_before or "work" in text_before:
@@ -212,23 +180,14 @@ class SkillNER:
     def _calculate_confidence(self, match_type: str, match_quality: float,
                              years: Optional[float], proficiency: str) -> float:
         """Calculate confidence score for skill extraction"""
-        base_confidence = 0.85  # Base for NER
-
-        # Adjust based on match quality
+        base_confidence = 0.85  
         confidence = base_confidence * match_quality
-
-        # Boost if we found years of experience (more explicit)
         if years is not None:
             confidence = min(0.95, confidence + 0.05)
-
-        # Small boost for clear proficiency
         if proficiency in ["expert", "intermediate"]:
             confidence = min(0.95, confidence + 0.02)
 
         return round(confidence, 2)
-
-
-# Global NER instance (lazy loaded)
 _ner_instance = None
 
 

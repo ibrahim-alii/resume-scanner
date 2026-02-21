@@ -10,8 +10,6 @@ export const JobDescriptionInput: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const resumeFile = location.state?.resumeFile as File | undefined;
-
-  // Redirect if no resume file
   React.useEffect(() => {
     if (!resumeFile) {
       navigate('/');
@@ -31,8 +29,6 @@ export const JobDescriptionInput: React.FC = () => {
 
     try {
       const result = await analyzeResume(resumeFile, jobDescription);
-
-      // Navigate to analysis page with results
       navigate('/analysis', {
         state: {
           analysisData: result.data,
@@ -53,12 +49,12 @@ export const JobDescriptionInput: React.FC = () => {
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center p-8">
       <div className="w-full max-w-3xl">
-        {/* Title */}
+        
         <h1 className="font-retro text-5xl mb-8 text-text font-bold text-center">
           Enter Job Description
         </h1>
 
-        {/* Resume file name */}
+        
         {resumeFile && (
           <div className="mb-4 text-center">
             <p className="font-retro text-text">
@@ -67,7 +63,7 @@ export const JobDescriptionInput: React.FC = () => {
           </div>
         )}
 
-        {/* Textarea */}
+        
         <textarea
           className="
             w-full
@@ -94,7 +90,7 @@ export const JobDescriptionInput: React.FC = () => {
           disabled={loading}
         />
 
-        {/* Analyze Button */}
+        
         <div className="mt-8 text-center">
           <button
             className="
@@ -123,7 +119,7 @@ export const JobDescriptionInput: React.FC = () => {
           </button>
         </div>
 
-        {/* Loading Message */}
+        
         {loading && (
           <div className="mt-6 text-center">
             <p className="font-retro text-text text-lg">
@@ -134,7 +130,7 @@ export const JobDescriptionInput: React.FC = () => {
           </div>
         )}
 
-        {/* Error Message */}
+        
         {error && (
           <div
             className="
@@ -154,7 +150,7 @@ export const JobDescriptionInput: React.FC = () => {
           </div>
         )}
 
-        {/* Back Button */}
+        
         <div className="mt-6 text-center">
           <button
             className="font-retro text-text underline hover:no-underline"

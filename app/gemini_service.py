@@ -7,17 +7,11 @@ from google import genai
 from google.genai import types
 from typing import Optional, Dict, Any, List
 from dotenv import load_dotenv
-
-# Load .env for direct module usage too (api.py also loads this at startup)
 load_dotenv(override=True)
-
-# Configure Gemini API
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 if GEMINI_MODEL.startswith("models/"):
     GEMINI_MODEL = GEMINI_MODEL[len("models/"):]
-
-# Initialize client if API key is available
 client = None
 if GEMINI_API_KEY:
     client = genai.Client(api_key=GEMINI_API_KEY)
@@ -41,20 +35,15 @@ def generate_ai_suggestions(
     Returns:
         Dictionary with 5 categories of suggestions, or None if API fails
     """
-
-    # Skip if no API key configured
     if not GEMINI_API_KEY or not client:
         print("[!] GEMINI_API_KEY not configured, skipping AI suggestions")
         return None
 
     try:
-        # Truncate inputs to prevent token overflow
         resume_truncated = resume_text[:4000]
         jd_truncated = job_description[:2000]
-        missing_top = missing_skills[:15]  # Top 15 missing skills
-        matching_top = matching_skills[:20]  # Top 20 matching skills
-
-        # Build the prompt
+        missing_top = missing_skills[:15]  
+        matching_top = matching_skills[:20]  
         prompt = f"""You are an expert resume coach with 15+ years of experience helping candidates optimize their resumes for Applicant Tracking Systems (ATS) and human recruiters.
 
 **YOUR TASK:** Analyze the resume against the job description and provide specific, actionable improvement suggestions in 5 categories.
@@ -157,23 +146,19 @@ def generate_ai_suggestions(
 
 **RETURN ONLY THE JSON - NO OTHER TEXT.**
 """
-
-        # Generate suggestions using new API
         print(f"[*] Calling Gemini API ({GEMINI_MODEL})...")
 
         response = client.models.generate_content(
             model=GEMINI_MODEL,
             contents=prompt,
             config=types.GenerateContentConfig(
-                temperature=0.3,  # Lower temperature for focused, consistent output
+                temperature=0.3,  
                 top_p=0.95,
                 top_k=40,
                 max_output_tokens=8192,
-                response_mime_type="application/json",  # Force JSON output
+                response_mime_type="application/json",  
             )
         )
-
-        # Parse JSON response
         suggestions = json.loads(response.text)
 
         print(f"[+] AI suggestions generated successfully")

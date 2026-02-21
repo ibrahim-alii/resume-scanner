@@ -18,7 +18,7 @@ export const analyzeResume = async (
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      timeout: 60000, // 60 seconds (BERT + Gemini can be slow)
+      timeout: 60000, 
     }
   );
 

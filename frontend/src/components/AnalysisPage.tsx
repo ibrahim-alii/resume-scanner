@@ -222,7 +222,7 @@ export const AnalysisPage: React.FC = () => {
           </div>
         </div>
 
-        {/* AI-Powered Resume Coach Section */}
+        
         {analysisData.ai_suggestions && (
           <div className="mb-8">
             <div className="bg-white border-4 border-text rounded-box p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
@@ -231,7 +231,7 @@ export const AnalysisPage: React.FC = () => {
                 AI-Powered Resume Coach
               </h2>
 
-              {/* Skill Gaps Section */}
+              
               <SuggestionSection<SkillGap>
                 title="Critical Skill Gaps"
                 emoji="🎯"
@@ -263,7 +263,7 @@ export const AnalysisPage: React.FC = () => {
                 )}
               />
 
-              {/* Quantification Opportunities Section */}
+              
               <SuggestionSection<QuantificationOpportunity>
                 title="Add Metrics & Numbers"
                 emoji="📊"
@@ -294,7 +294,7 @@ export const AnalysisPage: React.FC = () => {
                 )}
               />
 
-              {/* ATS Optimization Section */}
+              
               <SuggestionSection<AtsOptimization>
                 title="ATS Keyword Optimization"
                 emoji="🔍"
@@ -334,7 +334,7 @@ export const AnalysisPage: React.FC = () => {
                 )}
               />
 
-              {/* Impact Statements Section */}
+              
               <SuggestionSection<ImpactStatement>
                 title="Strengthen Bullet Points"
                 emoji="💪"
@@ -362,7 +362,7 @@ export const AnalysisPage: React.FC = () => {
                 )}
               />
 
-              {/* Strategic Recommendations Section */}
+              
               <SuggestionSection<StrategicRecommendation>
                 title="Strategic Recommendations"
                 emoji="🎓"
@@ -394,7 +394,7 @@ export const AnalysisPage: React.FC = () => {
           </div>
         )}
 
-        {/* Error state for AI suggestions */}
+        
         {analysisData.ai_suggestions_error && (
           <div className="mb-8">
             <div className="bg-yellow-50 border-4 border-yellow-500 rounded-box p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">

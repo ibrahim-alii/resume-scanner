@@ -8,37 +8,31 @@ export const LandingPage: React.FC = () => {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    // Validate file type
     if (!file.name.endsWith('.pdf') && !file.name.endsWith('.docx')) {
       setError('Please upload a PDF or DOCX file');
       return;
     }
-
-    // Validate file size (10MB)
     if (file.size > 10 * 1024 * 1024) {
       setError('File size must be less than 10MB');
       return;
     }
-
-    // Navigate to job description page with the file
     navigate('/job-description', { state: { resumeFile: file } });
   };
 
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center p-8">
       <div className="text-center">
-        {/* Title */}
+        
         <h1 className="font-retro text-7xl mb-4 text-text font-bold">
           ResuMatch
         </h1>
 
-        {/* Description */}
+        
         <p className="font-retro text-xl mb-12 text-text">
           Match your resume to any job - instantly
         </p>
 
-        {/* Upload Button */}
+        
         <label htmlFor="file-upload">
           <div
             className="
@@ -72,7 +66,7 @@ export const LandingPage: React.FC = () => {
           className="hidden"
         />
 
-        {/* Error Message */}
+        
         {error && (
           <div
             className="
