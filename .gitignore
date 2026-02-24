@@ -1,23 +1,15 @@
 __pycache__/
 *.py[cod]
 *.so
-
 env/
 venv/
-
 build/
 dist/
 *.egg-info/
-
 .env
-
 .vscode/
 .idea/
 .DS_Store
-
-data/
-
-# Frontend
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/

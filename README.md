@@ -1,7 +1,5 @@
 # Resume Scanner
 
-> AI-powered resume analysis tool that extracts skills, matches candidates to job descriptions, and provides intelligent improvement suggestions.
-
 ## Overview
 
 Resume Scanner is a full-stack application that leverages natural language processing (NLP) and machine learning to analyze resumes against job descriptions. It provides detailed scoring, skill gap analysis, and AI-generated recommendations to help candidates optimize their resumes for specific roles.
@@ -16,7 +14,6 @@ Resume Scanner is a full-stack application that leverages natural language proce
   - Quantification opportunities for impact statements
   - ATS (Applicant Tracking System) keyword optimization
   - Enhanced action verbs and strategic positioning
-- **Visual Dashboard**: Modern React interface with real-time analysis results
 - **Named Entity Recognition**: Extract names, education, and experience using spaCy's advanced NLP models
 - **Detailed Skills Comparison**: View matching, missing, and additional skills with match percentages
 
@@ -165,11 +162,3 @@ Build for production:
 ```bash
 npm run build
 ```
-
-## License
-
-This project is available for educational and personal use.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues and pull requests.

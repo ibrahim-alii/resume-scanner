@@ -1,6 +1,3 @@
-"""
-Gemini API integration for AI-powered resume suggestions.
-"""
 import os
 import json
 from google import genai

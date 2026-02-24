@@ -234,7 +234,6 @@ export const AnalysisPage: React.FC = () => {
               
               <SuggestionSection<SkillGap>
                 title="Critical Skill Gaps"
-                emoji="🎯"
                 colorClass="bg-red-600"
                 items={analysisData.ai_suggestions.skill_gaps}
                 renderItem={(gap) => (
@@ -266,7 +265,6 @@ export const AnalysisPage: React.FC = () => {
               
               <SuggestionSection<QuantificationOpportunity>
                 title="Add Metrics & Numbers"
-                emoji="📊"
                 colorClass="bg-blue-600"
                 items={analysisData.ai_suggestions.quantification_opportunities}
                 renderItem={(opp) => (
@@ -297,7 +295,6 @@ export const AnalysisPage: React.FC = () => {
               
               <SuggestionSection<AtsOptimization>
                 title="ATS Keyword Optimization"
-                emoji="🔍"
                 colorClass="bg-purple-600"
                 items={analysisData.ai_suggestions.ats_optimization}
                 renderItem={(ats) => (
@@ -337,7 +334,6 @@ export const AnalysisPage: React.FC = () => {
               
               <SuggestionSection<ImpactStatement>
                 title="Strengthen Bullet Points"
-                emoji="💪"
                 colorClass="bg-green-600"
                 items={analysisData.ai_suggestions.impact_statements}
                 renderItem={(impact) => (
@@ -365,7 +361,6 @@ export const AnalysisPage: React.FC = () => {
               
               <SuggestionSection<StrategicRecommendation>
                 title="Strategic Recommendations"
-                emoji="🎓"
                 colorClass="bg-teal-600"
                 items={analysisData.ai_suggestions.strategic_recommendations}
                 renderItem={(rec) => (

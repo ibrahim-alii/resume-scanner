@@ -24,7 +24,6 @@ spacy_model = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Pre-load ML models at startup to avoid first-request delay"""
     global bert_model, spacy_model
 
     print("[*] Loading BERT model...")
@@ -136,13 +135,11 @@ class AnalysisResponse(BaseModel):
 
 
 def _build_enhanced_skills_comparison(resume_skills_dict, job_skills_dict, basic_comparison):
-    """Build skills comparison maintaining simple string arrays for frontend compatibility."""
     return basic_comparison
 
 
 @app.get("/api/health")
 async def health_check():
-    """Health check endpoint"""
     return {
         "status": "healthy",
         "bert_loaded": bert_model is not None,
@@ -155,10 +152,6 @@ async def analyze_resume(
     file: UploadFile = File(...),
     job_description: str = Form(...),
 ):
-    """
-    Analyze resume against job description.
-    Returns scores and skills comparison.
-    """
     if not file.filename.endswith((".pdf", ".docx")):
         raise HTTPException(status_code=400, detail="Only PDF and DOCX files are supported")
 

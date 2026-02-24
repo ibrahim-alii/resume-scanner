@@ -2,7 +2,6 @@ import { useState } from 'react';
 
 interface SuggestionSectionProps<T> {
   title: string;
-  emoji: string;
   colorClass: string; 
   items: T[];
   renderItem: (item: T, index: number) => React.ReactNode;
@@ -10,7 +9,6 @@ interface SuggestionSectionProps<T> {
 
 export function SuggestionSection<T>({
   title,
-  emoji,
   colorClass,
   items,
   renderItem,
@@ -28,7 +26,6 @@ export function SuggestionSection<T>({
         className={`w-full flex items-center justify-between px-6 py-4 ${colorClass} text-white rounded-lg border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 hover:-translate-x-[2px] hover:-translate-y-[2px]`}
       >
         <div className="flex items-center gap-3">
-          <span className="text-2xl">{emoji}</span>
           <span className="font-retro text-lg font-bold">
             {title} ({items.length})
           </span>

@@ -4,7 +4,6 @@ from typing import Optional
 
 @dataclass
 class SkillEntity:
-    """Represents an extracted skill with metadata"""
     skill_name: str                    
     category: str                      
     confidence: float                  
@@ -16,7 +15,6 @@ class SkillEntity:
     extraction_method: str             
 
     def to_dict(self):
-        """Convert to dictionary for JSON serialization"""
         return {
             'skill': self.skill_name,
             'category': self.category,

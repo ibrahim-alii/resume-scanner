@@ -13,8 +13,6 @@ except ImportError:
 
 
 class SkillNER:
-    """Named Entity Recognition for skills extraction using spaCy"""
-
     def __init__(self):
         self.model = None
         self.phrase_matcher = None
@@ -23,7 +21,6 @@ class SkillNER:
         self.load_model()
 
     def load_model(self):
-        """Load spaCy model and initialize matchers"""
         if spacy is None:
             raise ImportError(
                 "spacy is not installed. Install it with: "
@@ -46,7 +43,6 @@ class SkillNER:
             )
 
     def _add_regex_patterns(self):
-        """Add regex-based patterns for tech skills"""
         year_pattern = [
             {"LOWER": {"REGEX": r"^\d+(\.\d+)?(\+)?$"}},  
             {"LOWER": {"REGEX": r"^years?$"}},             
@@ -55,7 +51,6 @@ class SkillNER:
         ]
 
     def extract_skills_ner(self, text: str) -> List[SkillEntity]:
-        """Extract skills from text using NER"""
         if self.model is None:
             return []
 
@@ -99,7 +94,6 @@ class SkillNER:
         return skills
 
     def _detect_proficiency(self, context: str) -> str:
-        """Detect proficiency level from context"""
         context_lower = context.lower()
         expert_keywords = [
             'expert', 'lead', 'architect', 'master', 'proficient with',
@@ -128,7 +122,6 @@ class SkillNER:
         return "beginner"
 
     def _extract_years_experience(self, context: str) -> Optional[float]:
-        """Extract years of experience from context"""
         patterns = [
             r'(\d+(?:\.\d+)?)\s*(?:\+)?\s*years?(?:\s+of|\s+in|\s+experience)?',
             r'for\s+(\d+(?:\.\d+)?)\s*(?:\+)?\s*years?',
@@ -147,7 +140,6 @@ class SkillNER:
         return None
 
     def _infer_seniority(self, years: Optional[float], proficiency: str) -> str:
-        """Infer seniority level from years and proficiency"""
         if years is not None:
             if years < 1:
                 return "junior"
@@ -163,7 +155,6 @@ class SkillNER:
             return "junior"
 
     def _detect_section(self, doc, span) -> str:
-        """Detect which section (experience, education, skills) the skill appears in"""
         text_before = doc[:span.start].text.lower()
 
         if "experience" in text_before or "work" in text_before:
@@ -179,7 +170,6 @@ class SkillNER:
 
     def _calculate_confidence(self, match_type: str, match_quality: float,
                              years: Optional[float], proficiency: str) -> float:
-        """Calculate confidence score for skill extraction"""
         base_confidence = 0.85  
         confidence = base_confidence * match_quality
         if years is not None:
@@ -192,7 +182,6 @@ _ner_instance = None
 
 
 def get_ner_model() -> SkillNER:
-    """Get or create the global NER model instance"""
     global _ner_instance
     if _ner_instance is None:
         _ner_instance = SkillNER()
@@ -200,6 +189,5 @@ def get_ner_model() -> SkillNER:
 
 
 def extract_skills_ner(text: str) -> List[SkillEntity]:
-    """Extract skills from text using NER - wrapper function"""
     ner = get_ner_model()
     return ner.extract_skills_ner(text)
